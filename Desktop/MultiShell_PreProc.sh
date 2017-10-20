@@ -28,6 +28,9 @@ for ((i=1; i<119; i+=1)); do indx="$indx 1"; done
 
 for i in $general;do 
 	bblIDs=$(echo ${i}|cut -d'/' -f8 |sed s@'/'@' '@g);
+	SubDate_and_ID=$(echo ${i}|cut -d'/' -f9|sed s@'/'@' '@g|sed s@'x'@','@g)
+	Date=$(echo ${SubDate_and_ID}|cut -d',' -f1)
+	ID=$(echo ${SubDate_and_ID}|cut -d',' -f2)
 	inputnifti=$(echo ${i}DTI_MultiShell_117dir/nifti/*.nii.gz)
 	unroundedbval=$(echo ${i}DTI_MultiShell_117dir/nifti/*.bval)
 	topupref=$(echo ${i}DTI_MultiShell_topup_ref/nifti/*.nii.gz)
@@ -40,6 +43,8 @@ for i in $general;do
 	eddy_outdir=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/eddy
 
 	mkdir -p ${eddy_outdir}
+	
+############QA#################
 
 # Import bvec
 	cp $unroundedbval $out/QA/bvec.bvec	
@@ -47,6 +52,8 @@ for i in $general;do
 	$scripts/bval_rounder.sh $unroundedbval $out/QA/roundedbval.bval 100
 # Get quality assurance metrics on DTI data for each shell
 	$scripts/qa_dti_v3.sh $inputnifti $out/QA/roundedbval.bval $bvec $out/QA/dwi.qa
+
+#############DISTORTION/MOTION CORRECTION################
 # Extract b0 from anterior to posterior phase-encoded input nifti for topup calculation	
 	fslroi $inputnifti $out/Topup/nodif_AP 0 1
 # Extract b0 from P>A topup ref for topup calculation
@@ -81,6 +88,7 @@ for i in $general;do
 	fslroi $eddy_outdir/eddied_maskedG.nii.gz $eddy_outdir/eddied_masked_b0G.nii.gz 0 1
  	
  	masked_b0=$eddy_outdir/eddied_masked_b0G.nii.gz
+###########COREGISTRATION####################
 
 # make white matter only mask from segmented T1 in prep for flirt BBR
      fslmaths /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*_BrainSegmentation.nii.gz -thr 3 -uthr 3 $out/Transforms/Struct_WM.nii.gz
@@ -92,5 +100,12 @@ for i in $general;do
 	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Transforms/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/Transforms/MultiShDiff2StructRas.mat
 
 
-# 
+##################AMICO/NODDI (as well as global initialize @ top, but only needs to be run once################## 
+
+#Generate Amico scheme (edit paths for files like mask and eddy output in generateAmicoM script)
+/data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/generateAmicoM_AP.pl {$bblIDs} {$SubDate_and_ID}
+
+#Run Amico
+/data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/runAmico.sh subjectsAMICO/DTI_MULTISHELL/{$bblIDs}/{$SubDate_and_ID}/runAMICO.m
+	
 done
