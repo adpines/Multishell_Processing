@@ -35,49 +35,51 @@ for i in $general;do
 	unroundedbval=$(echo ${i}DTI_MultiShell_117dir/nifti/*.bval)
 	topupref=$(echo ${i}DTI_MultiShell_topup_ref/nifti/*.nii.gz)
 	bvec=$(echo ${i}DTI_MultiShell_117dir/nifti/*.bvec)
-	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}
-	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/QA
-	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/Topup
-	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/Transforms
-	out=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs
-	eddy_outdir=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/eddy
+	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats
+	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats/QA
+	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats/Topup
+	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats/Eddy
+	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/CoReg
+	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO
+	out=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/${bblIDs}/${SubDate_and_ID}
+	eddy_outdir=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats/Eddy
 
 	mkdir -p ${eddy_outdir}
 	
 ############QA#################
 
 # Import bvec
-	cp $unroundedbval $out/QA/bvec.bvec	
+	cp $unroundedbval $out/Prestats/QA/bvec.bvec	
 # Round bvals up or down 5, corrects for scanner output error in bvals	
-	$scripts/bval_rounder.sh $unroundedbval $out/QA/roundedbval.bval 100
+	$scripts/bval_rounder.sh $unroundedbval $out/Prestats/QA/roundedbval.bval 100
 # Get quality assurance metrics on DTI data for each shell
-	$scripts/qa_dti_v3.sh $inputnifti $out/QA/roundedbval.bval $bvec $out/QA/dwi.qa
+	$scripts/qa_dti_v3.sh $inputnifti $out/Prestats/QA/roundedbval.bval $bvec $out/Prestats/QA/dwi.qa
 
 #############DISTORTION/MOTION CORRECTION################
 # Extract b0 from anterior to posterior phase-encoded input nifti for topup calculation	
-	fslroi $inputnifti $out/Topup/nodif_AP 0 1
+	fslroi $inputnifti $out/Prestats/Topup/nodif_AP 0 1
 # Extract b0 from P>A topup ref for topup calculation
-	fslroi $topupref $out/Topup/nodif_PA 0 1
+	fslroi $topupref $out/Prestats/Topup/nodif_PA 0 1
 # Merge b0s for topup calculation
-	fslmerge -t $out/Topup/b0s $out/Topup/nodif_AP $out/Topup/nodif_PA
+	fslmerge -t $out/Prestats/Topup/b0s $out/Prestats/Topup/nodif_AP $out/Prestats/Topup/nodif_PA
 # Run topup to calculate correction for field distortion
-	topup --imain=$out/Topup/b0s.nii.gz --datain=$1 --config=b02b0.cnf --out=$out/Topup/my_topup --fout=$out/Topup/my_field --iout=$out/Topup/topup_iout
+	topup --imain=$out/Prestats/Topup/b0s.nii.gz --datain=$1 --out=$out/Prestats/Topup/my_topup --fout=$out/Prestats/Topup/my_field --iout=$out/Prestats/Topup/topup_iout
 # Actually correct field distortion
-	applytopup --imain=$inputnifti --datain=$1 --inindex=1 --topup=$out/Topup/my_topup --out=$out/Topup/topup_applied --method=jac
+	applytopup --imain=$inputnifti --datain=$1 --inindex=1 --topup=$out/Prestats/Topup/my_topup --out=$out/Prestats/Topup/topup_applied --method=jac
 # Average MR signal over all volumes so brain extraction can work on signal representative of whole scan
-	fslmaths $out/Topup/topup_iout.nii.gz -Tmean $out/Topup/mean_iout.nii.gz
+	fslmaths $out/Prestats/Topup/topup_iout.nii.gz -Tmean $out/Prestats/Topup/mean_iout.nii.gz
 
 
 # Brain extraction mask for eddy, -m makes binary mask
-	topup_mask=$out/Topup/bet_mean_iout_point_2.nii.gz
+	topup_mask=$out/Prestats/Topup/bet_mean_iout_point_2.nii.gz
 
-	bet $out/Topup/mean_iout.nii.gz ${topup_mask} -m -f 0.2
+	bet $out/Prestats/Topup/mean_iout.nii.gz ${topup_mask} -m -f 0.2
 
 # Create index for eddy to know which acquisition parameters apply to which volumes.(Original usage only correcting A>P, only using one set of acq params.
 	echo $indx > index.txt
 
 # Run eddy correction. Corrects for Electromagnetic-pulse induced distortions. Most computationally intensive of anything here, has taken >5 hours. More recent eddy correction available in more recent FSL versions
-	/share/apps/fsl/5.0.5/bin/eddy --imain=$out/Topup/topup_applied.nii.gz --mask=${topup_mask} --index=index.txt --acqp=$1 --bvecs=$bvec --bvals=$out/QA/roundedbval.bval --out=$eddy_outdir/eddied.nii.gz
+	/share/apps/fsl/5.0.5/bin/eddy --imain=$out/Prestats/Topup/topup_applied.nii.gz --mask=${topup_mask} --index=index.txt --acqp=$1 --bvecs=$bvec --bvals=$out/QA/roundedbval.bval --out=$eddy_outdir/eddied.nii.gz
 	
 	eddy_output=$eddy_outdir/eddied.nii.gz
 
@@ -91,13 +93,13 @@ for i in $general;do
 ###########COREGISTRATION####################
 
 # make white matter only mask from segmented T1 in prep for flirt BBR
-     fslmaths /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*_BrainSegmentation.nii.gz -thr 3 -uthr 3 $out/Transforms/Struct_WM.nii.gz
+     fslmaths /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*_BrainSegmentation.nii.gz -thr 3 -uthr 3 $out/CoReg/Struct_WM.nii.gz
 # use flirt to calculate diffusion -> structural translation 
-	flirt -cost bbr -wmseg $out/Transforms/Struct_WM.nii.gz -in ${masked_b0} -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*ExtractedBrain0N4.nii.gz -out $out/Transforms/flirt_BBR -dof 6 -omat $out/Transforms/MultiShDiff2StructFSL.mat
+	flirt -cost bbr -wmseg $out/CoReg/Struct_WM.nii.gz -in ${masked_b0} -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*ExtractedBrain0N4.nii.gz -out $out/CoReg/flirt_BBR -dof 6 -omat $out/CoReg/MultiShDiff2StructFSL.mat
 # Convert FSL omat to Ras
-	c3d_affine_tool -src ${masked_b0} -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*ExtractedBrain0N4.nii.gz $out/Transforms/MultiShDiff2StructFSL.mat -fsl2ras -oitk $out/Transforms/MultiShDiff2StructRas.mat
+	c3d_affine_tool -src ${masked_b0} -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*ExtractedBrain0N4.nii.gz $out/CoReg/MultiShDiff2StructFSL.mat -fsl2ras -oitk $out/CoReg/MultiShDiff2StructRas.mat
 # Use Subject to template warp and affine from grmpy directory after Ras diffusion -> structural space affine to put eddied_bet_2 onto pnc template
-	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Transforms/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/Transforms/MultiShDiff2StructRas.mat
+	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/CoReg/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/CoReg/MultiShDiff2StructRas.mat
 
 
 ##################AMICO/NODDI (as well as global initialize @ top, but only needs to be run once################## 
