@@ -40,7 +40,9 @@ for i in $general;do
 	eddy_outdir=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/eddy
 
 	mkdir -p ${eddy_outdir}
-	
+
+# Import bvec
+	cp $unroundedbval $out/QA/bvec.bvec	
 # Round bvals up or down 5, corrects for scanner output error in bvals	
 	$scripts/bval_rounder.sh $unroundedbval $out/QA/roundedbval.bval 100
 # Get quality assurance metrics on DTI data for each shell
