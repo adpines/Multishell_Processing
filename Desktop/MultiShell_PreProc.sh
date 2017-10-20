@@ -46,7 +46,7 @@ for i in $general;do
 
 	mkdir -p ${eddy_outdir}
 	
-############QA#################
+############ QA #################
 
 # Import bvec
 	cp $unroundedbval $out/Prestats/QA/bvec.bvec	
@@ -55,7 +55,7 @@ for i in $general;do
 # Get quality assurance metrics on DTI data for each shell
 	$scripts/qa_dti_v3.sh $inputnifti $out/Prestats/QA/roundedbval.bval $bvec $out/Prestats/QA/dwi.qa
 
-#############DISTORTION/MOTION CORRECTION################
+############# DISTORTION/MOTION CORRECTION ################
 # Extract b0 from anterior to posterior phase-encoded input nifti for topup calculation	
 	fslroi $inputnifti $out/Prestats/Topup/nodif_AP 0 1
 # Extract b0 from P>A topup ref for topup calculation
@@ -90,7 +90,7 @@ for i in $general;do
 	fslroi $eddy_outdir/eddied_maskedG.nii.gz $eddy_outdir/eddied_masked_b0G.nii.gz 0 1
  	
  	masked_b0=$eddy_outdir/eddied_masked_b0G.nii.gz
-###########COREGISTRATION####################
+########### COREGISTRATION ####################
 
 # make white matter only mask from segmented T1 in prep for flirt BBR
      fslmaths /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*_BrainSegmentation.nii.gz -thr 3 -uthr 3 $out/CoReg/Struct_WM.nii.gz
@@ -102,7 +102,7 @@ for i in $general;do
 	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/CoReg/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/CoReg/MultiShDiff2StructRas.mat
 
 
-##################AMICO/NODDI (as well as global initialize @ top, but only needs to be run once################## 
+################## AMICO/NODDI (as well as global initialize @ top, but only needs to be run once) ################## 
 
 #Generate Amico scheme (edit paths for files like mask and eddy output in generateAmicoM script)
 /data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/generateAmicoM_AP.pl {$bblIDs} {$SubDate_and_ID}
