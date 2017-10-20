@@ -13,17 +13,10 @@
 
 #eddy step requires more memory than default allocation of 3 G of RAM. Use at least -l h_vmem=3.5,s_vmem=3
 
-general=/data/joy/BBL/studies/grmpy/rawData/*/*/
+general=/data/joy/BBL/studies/grmpy/rawData/129405/*/
 scripts=/home/melliott/scripts
 acqp=$1
 indx=""	
-
-# For AMICO/NODDI Running (via pcook)
-
-matlab -nodisplay -r "run '/data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/amicoGlobalInitialize.m'"
-exit
-
-#wrapper
 
 for ((i=1; i<119; i+=1)); do indx="$indx 1"; done
 
@@ -38,6 +31,9 @@ for i in $general;do
 	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/Topup
 	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/Transforms
 	out=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs
+	eddy_outdir=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/eddy
+
+	mkdir -p ${eddy_outdir}
 	
 # Round bvals up or down 5, corrects for scanner output error in bvals	
 	$scripts/bval_rounder.sh $unroundedbval $out/QA/roundedbval.bval 100
@@ -55,23 +51,36 @@ for i in $general;do
 	applytopup --imain=$inputnifti --datain=$1 --inindex=1 --topup=$out/Topup/my_topup --out=$out/Topup/topup_applied --method=jac
 # Average MR signal over all volumes so brain extraction can work on signal representative of whole scan
 	fslmaths $out/Topup/topup_iout.nii.gz -Tmean $out/Topup/mean_iout.nii.gz
+
+
 # Brain extraction mask for eddy, -m makes binary mask
-	bet $out/Topup/mean_iout.nii.gz $out/Topup/bet_iout_point_2 -m -f 0.2
+	topup_mask=$out/Topup/bet_mean_iout_point_2.nii.gz
+
+	bet $out/Topup/mean_iout.nii.gz ${topup_mask} -m -f 0.2
+
 # Create index for eddy to know which acquisition parameters apply to which volumes.(Original usage only correcting A>P, only using one set of acq params.
 	echo $indx > index.txt
+
 # Run eddy correction. Corrects for Electromagnetic-pulse induced distortions. Most computationally intensive of anything here, has taken >5 hours. More recent eddy correction available in more recent FSL versions
-	/share/apps/fsl/5.0.5/bin/eddy --imain=$out/Topup/topup_applied.nii.gz --mask=$out/Topup/bet_iout_point_2.nii.gz --index=index.txt --acqp=$1 --bvecs=$bvec --bvals=$out/QA/roundedbval.bval --out=$out/eddied
-# re-bet eddy output
-	bet $out/eddied.nii.gz $out/eddied_bet_2.nii.gz -c 70 70 46 -R -m -f 0.2
+	/share/apps/fsl/5.0.5/bin/eddy --imain=$out/Topup/topup_applied.nii.gz --mask=${topup_mask} --index=index.txt --acqp=$1 --bvecs=$bvec --bvals=$out/QA/roundedbval.bval --out=$eddy_outdir/eddied.nii.gz
+	
+	eddy_output=$eddy_outdir/eddied.nii.gz
+
+# Mask eddy output using topup mask
+	fslmaths ${eddy_output} -mas ${topup_mask} $eddy_outdir/eddied_maskedG.nii.gz
+
+# Mask eddy output using topup mask
+	fslroi $eddy_outdir/eddied_maskedG.nii.gz $eddy_outdir/eddied_masked_b0G.nii.gz 0 1
+ 	
+ 	masked_b0=$eddy_outdir/eddied_masked_b0G.nii.gz
+
 # make white matter only mask from segmented T1 in prep for flirt BBR
-        fslmaths /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*_BrainSegmentation.nii.gz -thr 3 -uthr 3 $out/Transforms/Struct_WM.nii.gz
+     fslmaths /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*_BrainSegmentation.nii.gz -thr 3 -uthr 3 $out/Transforms/Struct_WM.nii.gz
 # use flirt to calculate diffusion -> structural translation 
-	flirt -cost bbr -wmseg $out/Transforms/Struct_WM.nii.gz -in $out/eddied_bet_2.nii.gz -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*ExtractedBrain0N4.nii.gz -out $out/Transforms/flirt_BBR -dof 6 -omat $out/Transforms/MultiShDiff2StructFSL.mat
+	flirt -cost bbr -wmseg $out/Transforms/Struct_WM.nii.gz -in ${masked_b0} -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*ExtractedBrain0N4.nii.gz -out $out/Transforms/flirt_BBR -dof 6 -omat $out/Transforms/MultiShDiff2StructFSL.mat
 # Convert FSL omat to Ras
-	c3d_affine_tool -src $out/eddied_bet_2.nii.gz -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*ExtractedBrain0N4.nii.gz $out/Transforms/MultiShDiff2StructFSL.mat -fsl2ras -oitk $out/Transforms/MultiShDiff2StructRas.mat
+	c3d_affine_tool -src ${masked_b0} -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*ExtractedBrain0N4.nii.gz $out/Transforms/MultiShDiff2StructFSL.mat -fsl2ras -oitk $out/Transforms/MultiShDiff2StructRas.mat
 # Use Subject to template warp and affine from grmpy directory after Ras diffusion -> structural space affine to put eddied_bet_2 onto pnc template
-	antsApplyTransforms -e 3 -d 3 -i $out/eddied_bet_2.nii.gz -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Transforms/eddied_b0_template_space.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/Transforms/MultiShDiff2StructRas.mat
+	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Transforms/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/Transforms/MultiShDiff2StructRas.mat
 
 done
-
-	
