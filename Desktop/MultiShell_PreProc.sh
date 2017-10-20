@@ -13,10 +13,16 @@
 
 #eddy step requires more memory than default allocation of 3 G of RAM. Use at least -l h_vmem=3.5,s_vmem=3
 
-general=/data/joy/BBL/studies/grmpy/rawData/129405/*/
+general=/data/joy/BBL/studies/grmpy/rawData/*/*/
 scripts=/home/melliott/scripts
 acqp=$1
 indx=""	
+
+# For AMICO/NODDI Running (via pcook)				
+matlab -nodisplay -r "run '/data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/amicoGlobalInitialize.m'"		
+exit		
+		
+#wrapper
 
 for ((i=1; i<119; i+=1)); do indx="$indx 1"; done
 
@@ -83,4 +89,6 @@ for i in $general;do
 # Use Subject to template warp and affine from grmpy directory after Ras diffusion -> structural space affine to put eddied_bet_2 onto pnc template
 	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Transforms/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/*/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/Transforms/MultiShDiff2StructRas.mat
 
+
+# 
 done
