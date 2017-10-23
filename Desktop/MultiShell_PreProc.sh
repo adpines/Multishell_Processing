@@ -100,7 +100,7 @@ for i in $general;do
 # Convert FSL omat to Ras
 	c3d_affine_tool -src ${masked_b0} -ref /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*ExtractedBrain0N4.nii.gz $out/CoReg/MultiShDiff2StructFSL.mat -fsl2ras -oitk $out/CoReg/MultiShDiff2StructRas.mat
 # Use Subject to template warp and affine from grmpy directory after Ras diffusion -> structural space affine to put eddied_bet_2 onto pnc template
-	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/CoReg/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/CoReg/MultiShDiff2StructRas.mat
+	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Norm/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/CoReg/MultiShDiff2StructRas.mat
 
 
 ################## AMICO/NODDI (as well as global initialize @ top, but only needs to be run once) ################## 
