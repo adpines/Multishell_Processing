@@ -13,14 +13,13 @@
 
 #eddy step requires more memory than default allocation of 3 G of RAM. Use at least -l h_vmem=3.5,s_vmem=3
 
-general=/data/joy/BBL/studies/grmpy/rawData/*/*/
+general=/data/joy/BBL/studies/grmpy/rawData/97092/*/
 scripts=/home/melliott/scripts
 acqp=$1
 indx=""	
 
 # For AMICO/NODDI Running (via pcook)				
-matlab -nodisplay -r "run '/data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/amicoGlobalInitialize.m'"		
-exit		
+#matlab -nodisplay -r 'run /data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/amicoGlobalInitialize.m' exit		
 		
 #wrapper
 
@@ -28,13 +27,14 @@ for ((i=1; i<119; i+=1)); do indx="$indx 1"; done
 
 for i in $general;do 
 	bblIDs=$(echo ${i}|cut -d'/' -f8 |sed s@'/'@' '@g);
-	SubDate_and_ID=$(echo ${i}|cut -d'/' -f9|sed s@'/'@' '@g|sed s@'x'@','@g)
+	SubDate_and_ID=$(echo ${i}|cut -d'/' -f9|sed s@'/'@' '@g|sed s@'x'@'x'@g)
 	Date=$(echo ${SubDate_and_ID}|cut -d',' -f1)
 	ID=$(echo ${SubDate_and_ID}|cut -d',' -f2)
 	inputnifti=$(echo ${i}DTI_MultiShell_117dir/nifti/*.nii.gz)
 	unroundedbval=$(echo ${i}DTI_MultiShell_117dir/nifti/*.bval)
 	topupref=$(echo ${i}DTI_MultiShell_topup_ref/nifti/*.nii.gz)
 	bvec=$(echo ${i}DTI_MultiShell_117dir/nifti/*.bvec)
+	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/
 	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats
 	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats/QA
 	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats/Topup
@@ -42,15 +42,16 @@ for i in $general;do
 	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/CoReg
 	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Norm
 	mkdir /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO
-	out=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/$bblIDs/${bblIDs}/${SubDate_and_ID}
+	out=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}
 	eddy_outdir=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/Prestats/Eddy
 
 	mkdir -p ${eddy_outdir}
 	
 ############ QA #################
-
-# Import bvec
-	cp $unroundedbval $out/Prestats/QA/bvec.bvec	
+# Add Mark Elliot's QA script path
+	PATH=$PATH:/home/melliott/scripts
+# Import bval
+	cp $unroundedbval $out/Prestats/QA
 # Round bvals up or down 5, corrects for scanner output error in bvals	
 	$scripts/bval_rounder.sh $unroundedbval $out/Prestats/QA/roundedbval.bval 100
 # Get quality assurance metrics on DTI data for each shell
@@ -80,7 +81,8 @@ for i in $general;do
 	echo $indx > index.txt
 
 # Run eddy correction. Corrects for Electromagnetic-pulse induced distortions. Most computationally intensive of anything here, has taken >5 hours. More recent eddy correction available in more recent FSL versions
-	/share/apps/fsl/5.0.5/bin/eddy --imain=$out/Prestats/Topup/topup_applied.nii.gz --mask=${topup_mask} --index=index.txt --acqp=$1 --bvecs=$bvec --bvals=$out/QA/roundedbval.bval --out=$eddy_outdir/eddied.nii.gz
+	mkdir $out/ontoeddy	
+	/share/apps/fsl/5.0.5/bin/eddy --imain=$out/Prestats/Topup/topup_applied.nii.gz --mask=${topup_mask} --index=index.txt --acqp=$1 --bvecs=$bvec --bvals=$out/Prestats/QA/roundedbval.bval --out=$eddy_outdir/eddied.nii.gz
 	
 	eddy_output=$eddy_outdir/eddied.nii.gz
 
@@ -103,7 +105,7 @@ for i in $general;do
 	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Norm/eddied_b0_template_spaceG.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/CoReg/MultiShDiff2StructRas.mat
 
 
-################## AMICO/NODDI (as well as global initialize @ top, but only needs to be run once) ################## 
+################## AMICO/NODDI (as well as global initialize @ top, but only needs to be run once so I put it out of the for loop?) ################## 
 
 #Generate Amico scheme (edit paths for files like mask and eddy output in generateAmicoM script)
 /data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/generateAmicoM_AP.pl {$bblIDs} {$SubDate_and_ID}
@@ -111,7 +113,7 @@ for i in $general;do
 #Run Amico
 /data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/runAmico.sh /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO/runAMICO.m
 
-# Translate and Warp Amico Output to Normalized Space (dependent on structural to sequence translation and warp already being calculated)
+# Translate and Warp Amico Outputs to Normalized Space (dependent on structural to template translation and warp already being calculated, sequence to structural calculated above)
 antsApplyTransforms -e 3 -d 3 -i /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO/FIT_dir.nii -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Norm/Norm_FIT_dir.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/{$bblIDs}/{$SubDate_and_ID}/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/CoReg/MultiShDiff2StructRas.mat
 antsApplyTransforms -e 3 -d 3 -i /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO/FIT_ICVF.nii -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Norm/Norm_FIT_ICVF.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/{$bblIDs}/{$SubDate_and_ID}/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/CoReg/MultiShDiff2StructRas.mat
 antsApplyTransforms -e 3 -d 3 -i /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO/FIT_ISOVF.nii -r /data/joy/BBL/studies/pnc/template/pnc_template_brain.nii.gz -o $out/Norm/Norm_FIT_ISOVF.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/{$bblIDs}/{$SubDate_and_ID}/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/{$SubDate_and_ID}/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/CoReg/MultiShDiff2StructRas.mat
