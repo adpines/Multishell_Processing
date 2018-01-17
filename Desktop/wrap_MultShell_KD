@@ -1,0 +1,35 @@
+#!/bin/bash
+
+#KD_LL Version
+
+general=/data/jux/daviska/3T_Subjects/*/
+
+for i in $general;do 
+	IDs=$(echo ${i});
+
+	## Setup AMICO/NODDI (via pcook)				
+	matlab -nodisplay -r 'run /data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/amicoGlobalInitialize.m' -r 'exit' 
+
+	# Remove old output
+	
+	#rm -r /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/
+	
+	## Create log directory
+
+	mkdir /data/jux/daviska/3T_Subjects/${IDs}/NODDI
+	logDir=/data/jux/daviska/3T_Subjects/${IDs}/NODDI/logfiles
+	mkdir -p ${logDir}
+
+	## Write subject-specific script for qsub
+	var0="pushd ~/; ./MultiShell_PreProc_KD.sh ${IDs}; popd"
+
+	echo -e "${var0}" > ${logDir}/run_MultiShell_PreProc_"${IDs}".sh
+
+	subject_script=${logDir}/run_MultiShell_PreProc_"${IDs}".sh
+	
+	# chmod 775 ${subject_script}
+ 	
+	## Execute qsub job for probtrackx2 runs for each subject 
+	#qsub -q all.q,basic.q -wd ${logDir} -l h_vmem=8G,s_vmem=7G ${subject_script}
+
+done
