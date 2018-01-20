@@ -20,7 +20,7 @@
 
 IDs=$1
 
-general=/data/jux/daviska/lkini/3T_Subjects/$IDs/img/orig
+general=/data/jux/daviska/3T_Subjects/$IDs
 scripts=/home/melliott/scripts
 acqp=~/acqpkd.txt
 indx=""	
@@ -42,16 +42,18 @@ indx=""
 	#topupref=$(echo $general/DTI_MultiShell_topup_ref/nifti/*.nii.gz)
 	
 # Make directory structure
-	mkdir /data/jux/daviska/3T_Subjects/${IDs}/NODDI/
-	mkdir /data/jux/daviska/3T_Subjects/${IDs}/NODDI/unproc
-	mkdir /data/jux/daviska/3T_Subjects/${IDs}/NODDI/prestats
-	mkdir /data/jux/daviska/3T_Subjects/${IDs}/NODDI/prestats/qa
-	mkdir /data/jux/daviska/3T_Subjects/${IDs}/NODDI/prestats/eddy
-	mkdir /data/jux/daviska/3T_Subjects/${IDs}/NODDI/coreg
-	mkdir /data/jux/daviska/3T_Subjects/${IDs}/NODDI/norm
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/prestats
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/prestats/qa
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/prestats/eddy
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/coreg
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/norm
 
-	out=/data/jux/daviska/3T_Subjects/${IDs}/NODDI
-	eddy_outdir=/data/jux/daviska/3T_Subjects/${IDs}/NODDI/prestats/eddy
+	out=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI
+	eddy_outdir=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/prestats/eddy
 
 	#################################
 	##            qa               ##
@@ -62,13 +64,50 @@ indx=""
 
 	# Merge all Shells into one nifti because that's what I'm used to and change is scary
 
-	fslmerge -t ${out}/unproc/${IDs}_MultiShell_Merged.nii.gz ${general}/diffusion/*/*.nii.gz
+		#b2000 shell
 	
-	inputnifti=$(echo ${out}/unproc/${IDs}_MultiShell_Merged.nii.gz)
+	cp $general/NODDI_B_2000_Series0006/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/
+	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc
+	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/*
+	for i in $series; do 
+		dicomspaces=$(echo ${i}|cut -d'/' -f10 |sed s@'/'@' '@g)
+		dicom=$(echo ${dicomspaces}|cut -d ' ' -f2|cut -d '(' -f2|cut -d ')' -f1)_2000
+		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/${dicom}"
+		done
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/00*
+
+		#b300 shell	
+
+	cp $general/NODDI_B_300_Series0008/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/
+	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/*
+	for i in $series; do 
+		dicomspaces=$(echo ${i}|cut -d'/' -f10 |sed s@'/'@' '@g)
+		dicom=$(echo ${dicomspaces}|cut -d ' ' -f2|cut -d '(' -f2|cut -d ')' -f1)_300
+		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/${dicom}"
+		done
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/00*
+
+		#b700 shell
+
+	cp $general/NODDI_B_700_Series0007/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/
+	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/*
+	for i in $series; do 
+		dicomspaces=$(echo ${i}|cut -d'/' -f10 |sed s@'/'@' '@g)
+		dicom=$(echo ${dicomspaces}|cut -d ' ' -f2|cut -d '(' -f2|cut -d ')' -f1)_700
+		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/${dicom}"
+		done
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/00*
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/core*
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/core*
+	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells
+	dcm2nii *
+
+	fslmerge -t ${out}/unproc/${IDs}_MultiShell_Merged.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/*.nii.gz
+	inputnifti=${out}/unproc/${IDs}_MultiShell_Merged.nii.gz	
 
 	# Merge corresponding .bval and .bvec files	
-	paste -d"\0" ${general}/diffusion/*/*.bvec >> ${out}/unproc/bvecs
-	paste -d"\0" ${general}/diffusion/*/*.bval >> ${out}/unproc/bvals
+	paste -d"\0" ${out}/unproc/shells/*.bvec >> ${out}/unproc/bvecs
+	paste -d"\0" ${out}/unproc/shells/*.bval >> ${out}/unproc/bvals
 
 	unroundedbval=$(echo ${out}/unproc/bvals)
 	bvec=$(echo ${out}/unproc/bvecs)
@@ -95,9 +134,8 @@ indx=""
 	#mv ${qaMask} ${out}/prestats/qa/${IDs}_${SubDate_and_ID}_${qfilename}
 
 	## Zip all nifti files
-	gzip -f ${out}/prestats/qa/*.nii
+	#gzip -f ${out}/prestats/qa/*.nii
 	
-
 	###########################################################
 	##              DISTORTION/MOTION CORRECTION             ##
 	###########################################################
@@ -121,18 +159,16 @@ indx=""
 	fslmaths $inputnifti -Tmean $out/prestats/eddy/${IDs}_mean_for_init_mask.nii.gz
 
 	# Brain extraction mask for eddy, -m makes binary mask
-	init_mask=$out/prestats/eddy/${IDs}_init_mask.nii.gz
+	init_mask=$out/prestats/eddy/${IDs}_init_bet.nii.gz
 
 	bet $out/prestats/eddy/${IDs}_mean_for_init_mask.nii.gz ${init_mask} -m -f 0.2
 
-	
-	#############TEST UP TO HERE#################
-
 	# Create index for eddy to know which acquisition parameters apply to which volumes.(Original usage only correcting A>P, only using one set of acq params.)
-	echo $indx > $out/index.txt
+	for ((i=1; i<=119; i+=1)); do indx="$indx 1"; done
+	echo $indx > ${eddy_outdir}/index.txt
 
 	# Run eddy correction. Corrects for Electromagnetic-pulse induced distortions. Most computationally intensive of anything here, has taken >5 hours. More recent eddy correction available in more recent FSL versions	
-	/share/apps/fsl/5.0.9-eddy-patch/bin/eddy_openmp --imain=${inputnifti} --mask=${init_mask} --index=$out/index.txt --acqp=$acqp --bvecs=$bvec --bvals=$out/prestats/qa/${IDs}_roundedbval.bval --out=$eddy_outdir/${IDs}_eddied.nii.gz --repol
+	/share/apps/fsl/5.0.9-eddy-patch/bin/eddy_openmp --imain=${inputnifti} --mask=$out/prestats/eddy/${IDs}_init_bet_mask.nii.gz --index=${eddy_outdir}/index.txt --acqp=$acqp --bvecs=$bvec --bvals=$out/prestats/qa/${IDs}_roundedbval.bval --data_is_shelled --out=$eddy_outdir/${IDs}_eddied.nii.gz --repol
 	
 	eddy_output=$eddy_outdir/${IDs}_eddied.nii.gz
 	
