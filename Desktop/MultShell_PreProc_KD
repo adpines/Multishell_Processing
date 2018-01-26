@@ -26,7 +26,7 @@ acqp=~/acqpkd.txt
 indx=""	
 
 # For AMICO/NODDI Running (via pcook)				
-#matlab -nodisplay -r 'run /data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/amicoGlobalInitialize.m' -r 'exit' 
+matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobalInitialize.m' -r 'exit' 
 	
 		
 # wrapper
@@ -40,20 +40,24 @@ indx=""
 	#ID=$(echo ${SubDate_and_ID}|cut -d',' -f2)
 	#inputnifti=$(echo $general/DTI_MultiShell_117dir/nifti/*.nii.gz)
 	#topupref=$(echo $general/DTI_MultiShell_topup_ref/nifti/*.nii.gz)
-	
+
+#	Clean up old files
+	rm -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc
 # Make directory structure
 	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}
-	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI
-	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc
-	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells
-	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/prestats
-	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/prestats/qa
-	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/prestats/eddy
-	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/coreg
-	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/norm
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Phase
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/qa
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg
+	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/norm
 
-	out=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI
-	eddy_outdir=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/prestats/eddy
+	out=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}
+	eddy_outdir=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy
 
 	#################################
 	##            qa               ##
@@ -66,43 +70,44 @@ indx=""
 
 		#b2000 shell
 	
-	cp $general/NODDI_B_2000_Series0006/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/
-	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc
-	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/*
+	cp $general/NODDI_B_2000_Series*/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells
+	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells
+	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/*
 	for i in $series; do 
 		dicomspaces=$(echo ${i}|cut -d'/' -f10 |sed s@'/'@' '@g)
 		dicom=$(echo ${dicomspaces}|cut -d ' ' -f2|cut -d '(' -f2|cut -d ')' -f1)_2000
-		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/${dicom}"
+		echo $dicom
+		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/${dicom}"
 		done
-	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/00*
+	#rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/00*
 
 		#b300 shell	
 
-	cp $general/NODDI_B_300_Series0008/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/
-	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/*
+	cp $general/NODDI_B_300_Series*/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells
+	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/*
 	for i in $series; do 
 		dicomspaces=$(echo ${i}|cut -d'/' -f10 |sed s@'/'@' '@g)
 		dicom=$(echo ${dicomspaces}|cut -d ' ' -f2|cut -d '(' -f2|cut -d ')' -f1)_300
-		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/${dicom}"
+		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/${dicom}"
 		done
-	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/00*
+	#rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/00*
 
 		#b700 shell
 
-	cp $general/NODDI_B_700_Series0007/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/
-	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/*
+	cp $general/NODDI_B_700_Series*/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells
+	series=/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/*
 	for i in $series; do 
 		dicomspaces=$(echo ${i}|cut -d'/' -f10 |sed s@'/'@' '@g)
 		dicom=$(echo ${dicomspaces}|cut -d ' ' -f2|cut -d '(' -f2|cut -d ')' -f1)_700
-		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/${dicom}"
+		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/${dicom}"
 		done
-	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/00*
-	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/core*
-	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/core*
-	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/00*
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/core*
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/core*
+	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells
 	dcm2nii *
 
-	fslmerge -t ${out}/unproc/${IDs}_MultiShell_Merged.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/NODDI/unproc/shells/*.nii.gz
+	fslmerge -t ${out}/unproc/${IDs}_MultiShell_Merged.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/*.nii.gz
 	inputnifti=${out}/unproc/${IDs}_MultiShell_Merged.nii.gz	
 
 	# Merge corresponding .bval and .bvec files	
@@ -116,7 +121,7 @@ indx=""
 	$scripts/bval_rounder.sh $unroundedbval $out/prestats/qa/${IDs}_roundedbval.bval 100
 
 	# Get quality assurance metrics on DTI data for each shell
-	$scripts/qa_dti_v3.sh $inputnifti $out/prestats/qa/${IDs}_roundedbval.bval $bvec $out/prestats/qa/${IDs}_dwi.qa 	
+	##$scripts/qa_dti_v3.sh $inputnifti $out/prestats/qa/${IDs}_roundedbval.bval $bvec $out/prestats/qa/${IDs}_dwi.qa 	
 	
 	# Get quality assurance metrics on DTI data for each shell with v4
 	#$scripts/qa_dti_v4.sh $inputnifti $unroundedbval $bvec 100 $out/prestats/qa/${IDs}_${SubDate_and_ID}_dwi.qa 
@@ -137,7 +142,7 @@ indx=""
 	#gzip -f ${out}/prestats/qa/*.nii
 	
 	###########################################################
-	##              DISTORTION/MOTION CORRECTION             ##
+	##           EDDY DISTORTION/MOTION CORRECTION           ##
 	###########################################################
 
 	# Extract b0 from anterior to posterior phase-encoded input nifti for topup calculation	
@@ -168,7 +173,7 @@ indx=""
 	echo $indx > ${eddy_outdir}/index.txt
 
 	# Run eddy correction. Corrects for Electromagnetic-pulse induced distortions. Most computationally intensive of anything here, has taken >5 hours. More recent eddy correction available in more recent FSL versions	
-	/share/apps/fsl/5.0.9-eddy-patch/bin/eddy_openmp --imain=${inputnifti} --mask=$out/prestats/eddy/${IDs}_init_bet_mask.nii.gz --index=${eddy_outdir}/index.txt --acqp=$acqp --bvecs=$bvec --bvals=$out/prestats/qa/${IDs}_roundedbval.bval --data_is_shelled --out=$eddy_outdir/${IDs}_eddied.nii.gz --repol
+	##/share/apps/fsl/5.0.9-eddy-patch/bin/eddy_openmp --imain=${inputnifti} --mask=$out/prestats/eddy/${IDs}_init_bet_mask.nii.gz --index=${eddy_outdir}/index.txt --acqp=$acqp --bvecs=$bvec --bvals=$out/prestats/qa/${IDs}_roundedbval.bval --data_is_shelled --out=$eddy_outdir/${IDs}_eddied.nii.gz --repol
 	
 	eddy_output=$eddy_outdir/${IDs}_eddied.nii.gz
 	
@@ -177,7 +182,7 @@ indx=""
 
 	fslroi ${eddy_outdir}/${IDs}_eddied_initMasked.nii.gz ${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz 0 1
 	 	
-	 masked_b0=${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz
+	masked_b0=${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz
 
         
 	#NOTE BVECS should be rotated automatically in all post 5.0.9 eddy patches if bvecs read correctly. How to confirm this here https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#HelpOnRotBvec
@@ -188,7 +193,11 @@ indx=""
 
 	# Make mask from fsl's bet from T1
 
-	bet /data/jux/daviska/lkini/3T_Subjects/${IDs}/img/orig/T1/nii/*.nii.gz ${out}/coreg/${IDs}_T1_betted.nii.gz -m -f .4
+	bet /data/jux/daviska/lkini/3T_Subjects/${IDs}/img/orig/T1/nii/${IDs}_3T_T1.nii.gz ${out}/coreg/${IDs}_T1_betted.nii.gz -m -f .6
+
+	# More stringent one for B0 coreg
+	
+	bet /data/jux/daviska/lkini/3T_Subjects/${IDs}/img/orig/T1/nii/${IDs}_3T_T1.nii.gz ${out}/coreg/${IDs}_T1_bettedStrin.nii.gz -m -f .75
 
 	# Segment T1 into white matter for coreg
 
@@ -209,12 +218,59 @@ indx=""
 	# Take T1 generated mask to sequence (diffusion) space
 	antsApplyTransforms -e 3 -d 3 -i ${out}/coreg/${IDs}_T1_betted_mask.nii.gz -r ${masked_b0} -o $out/prestats/eddy/${IDs}_seqSpaceT1Mask.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
 
-	# Binarize Mask - not sure why it doesn't come out binarized... very small edge spaces with values b/w 0-1 (Because you didn't do nearestneighbor in previous command)
-	#fslmaths $out/prestats/eddy/${bblIDs}_${SubDate_and_ID}_seqSpaceT1Mask.nii.gz -thr .1 -bin $out/prestats/eddy/${bblIDs}_${SubDate_and_ID}_seqSpaceT1Mask.nii.gz
-
 	#remask eddy output using T1 space generated mask
 
-	fslmaths ${eddy_output} -mas $out/prestats/eddy/${IDs}_seqSpaceT1Mask.nii.gz ${eddy_outdir}/${IDs}_eddied_t1Masked.nii.gz
+	fslmaths ${out}/prestats/eddy/${IDs}_eddied.nii.gz -mas $out/prestats/eddy/${IDs}_seqSpaceT1Mask.nii.gz ${eddy_outdir}/${IDs}_eddied_t1Masked.nii.gz
+
+	###########################################################
+	##           B0-BASED CORRECTION (field distortion)      ##
+	###########################################################
+	
+	# Grab Magnitude B0	
+	cp $general/B0map_Series0012/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude
+	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude
+	dcm2nii *
+
+	# Extract brain
+	bet *.nii.gz Mag_B0_Betted.nii.gz -f .7
+
+	# Make extraction tigher via erosion, reccomended on fsl webpage
+	fslmaths Mag_B0_Betted.nii.gz -ero Mag_B0_Betted_Ero.nii.gz
+
+	# WE CAN REBUILD HIM... FASTER... STRONGER... TIGHTER...(erode again)
+	fslmaths Mag_B0_Betted_Ero.nii.gz -ero Mag_B0_Betted_Ero.nii.gz
+	
+	# Grab phase B0
+	cp $general/B0map_Series0013/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Phase
+	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Phase
+	dcm2nii *
+
+	# Synthesize into fieldmap for correction
+	fsl_prepare_fieldmap SIEMENS ${out}/unproc/B0_Phase/*.nii.gz ${out}/unproc/B0_Magnitude/Mag_B0_Betted_Ero.nii.gz ${out}/prestats/fieldmap.nii.gz 2.46
+
+	# use flirt to calculate fieldmap -> structural translation 
+	flirt -in /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude/Mag_B0_Betted.nii.gz -ref ${out}/coreg/${IDs}_T1_bettedStrin.nii.gz -out ${out}/prestats/fieldmap_struct.nii.gz -dof 6 -omat $out/coreg/${IDs}_FieldMap2StructFSL.mat
+
+	# Convert FSL omat to Ras
+	c3d_affine_tool -src ${out}/prestats/fieldmap.nii.gz -ref ${out}/coreg/${IDs}_T1_betted.nii.gz $out/coreg/${IDs}_FieldMap2StructFSL.mat -fsl2ras -oitk $out/coreg/${IDs}_FieldMap2StructRas.mat
+
+	# Take Fieldmap to T1 space
+	antsApplyTransforms -e 3 -d 3 -i ${out}/prestats/fieldmap.nii.gz -r ${out}/coreg/${IDs}_T1_bettedStrin.nii.gz -o $out/coreg/${IDs}_StructSpaceFieldMap.nii.gz -t $out/coreg/${IDs}_FieldMap2StructRas.mat -n NearestNeighbor
+
+	# Take Fieldmap from T1 space to sequence (diffusion) space via translation aka affine
+	antsApplyTransforms -e 3 -d 3 -i ${out}/coreg/${IDs}_StructSpaceFieldMap.nii.gz -r ${masked_b0} -o $out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
+
+	# Fieldmap warp into diffusion space
+	
+	#fnirt --ref=${masked_b0} --in=$out/coreg/${IDs}_seqSpaceFieldMap.nii.gz 
+	#applywarp -i $out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -o $out/coreg/${IDs}_seqSpaceFM_Warped -r ${masked_b0} -w $out/coreg/${IDs}_seqSpaceFieldMap_warpcoef.nii.gz
+	# Apply field distortion correction to eddy corrected thing with initial mask
+
+	 fugue -i ${eddy_output} --dwell=0.00069 --loadfmap=$out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -u ${IDs}_fugued.nii.gz
+
+	# Move fugued file because fugue won't accept a destination directory without trying to shame me into believing my output file should exist already 
+	
+	mv ${out}/unproc/B0_Phase/${IDs}_fugued.nii.gz ${out}/prestats/${IDs}_fugued.nii.gz
 
 	########################################################
 	###                AMICO/NODDI			     ###
@@ -225,14 +281,14 @@ indx=""
 
 	# Run AMICO
 	runAmicoScript=${out}/AMICO/runAMICO.m
-	/data/joy/BBL/projects/multishell_diffusion/multishell_diffusionScripts/amicoSYRP/scripts/runAmico.sh ${out}/AMICO/runAMICO.m
+	/data/jux/daviska/apines/amicoSYRP/scripts/runAmico.sh ${out}/AMICO/runAMICO.m
 
 	#pushd /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO/
 	#matlab -nosplash -nodesktop -r "runAMICO.m; exit()"
 	#popd
 	
 	# Make NODDI Dir
-	#NODDIdir=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO/NODDI
+	#NODDIdir=/data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/${bblIDs}/${SubDate_and_ID}/AMICO
 	
 	# Zip and rename native space NODDI outputs to subejct specific
 	#gzip $NODDIdir/*.nii
