@@ -227,38 +227,38 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	###########################################################
 	
 	# Grab Magnitude B0	
-	cp $general/B0map_Series0012/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude
-	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude
-	dcm2nii *
+	#cp $general/B0map_Series0012/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude
+	#cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude
+	#dcm2nii *
 
 	# Extract brain
-	bet *.nii.gz Mag_B0_Betted.nii.gz -f .7
+	#bet *.nii.gz Mag_B0_Betted.nii.gz -f .7
 
 	# Make extraction tigher via erosion, reccomended on fsl webpage
-	fslmaths Mag_B0_Betted.nii.gz -ero Mag_B0_Betted_Ero.nii.gz
+	#fslmaths Mag_B0_Betted.nii.gz -ero Mag_B0_Betted_Ero.nii.gz
 
 	# WE CAN REBUILD HIM... FASTER... STRONGER... TIGHTER...(erode again)
-	fslmaths Mag_B0_Betted_Ero.nii.gz -ero Mag_B0_Betted_Ero.nii.gz
+	#fslmaths Mag_B0_Betted_Ero.nii.gz -ero Mag_B0_Betted_Ero.nii.gz
 	
 	# Grab phase B0
-	cp $general/B0map_Series0013/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Phase
-	cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Phase
-	dcm2nii *
+	#cp $general/B0map_Series0013/* /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Phase
+	#cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Phase
+	#dcm2nii *
 
 	# Synthesize into fieldmap for correction
-	fsl_prepare_fieldmap SIEMENS ${out}/unproc/B0_Phase/*.nii.gz ${out}/unproc/B0_Magnitude/Mag_B0_Betted_Ero.nii.gz ${out}/prestats/fieldmap.nii.gz 2.46
+	#fsl_prepare_fieldmap SIEMENS ${out}/unproc/B0_Phase/*.nii.gz ${out}/unproc/B0_Magnitude/Mag_B0_Betted_Ero.nii.gz ${out}/prestats/fieldmap.nii.gz 2.46
 
 	# use flirt to calculate fieldmap -> structural translation 
-	flirt -in /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude/Mag_B0_Betted.nii.gz -ref ${out}/coreg/${IDs}_T1_bettedStrin.nii.gz -out ${out}/prestats/fieldmap_struct.nii.gz -dof 6 -omat $out/coreg/${IDs}_FieldMap2StructFSL.mat
+	#flirt -in /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/B0_Magnitude/Mag_B0_Betted.nii.gz -ref ${out}/coreg/${IDs}_T1_bettedStrin.nii.gz -out ${out}/prestats/fieldmap_struct.nii.gz -dof 6 -omat $out/coreg/${IDs}_FieldMap2StructFSL.mat
 
 	# Convert FSL omat to Ras
-	c3d_affine_tool -src ${out}/prestats/fieldmap.nii.gz -ref ${out}/coreg/${IDs}_T1_betted.nii.gz $out/coreg/${IDs}_FieldMap2StructFSL.mat -fsl2ras -oitk $out/coreg/${IDs}_FieldMap2StructRas.mat
+	#c3d_affine_tool -src ${out}/prestats/fieldmap.nii.gz -ref ${out}/coreg/${IDs}_T1_betted.nii.gz $out/coreg/${IDs}_FieldMap2StructFSL.mat -fsl2ras -oitk $out/coreg/${IDs}_FieldMap2StructRas.mat
 
 	# Take Fieldmap to T1 space
-	antsApplyTransforms -e 3 -d 3 -i ${out}/prestats/fieldmap.nii.gz -r ${out}/coreg/${IDs}_T1_bettedStrin.nii.gz -o $out/coreg/${IDs}_StructSpaceFieldMap.nii.gz -t $out/coreg/${IDs}_FieldMap2StructRas.mat -n NearestNeighbor
+	#antsApplyTransforms -e 3 -d 3 -i ${out}/prestats/fieldmap.nii.gz -r ${out}/coreg/${IDs}_T1_bettedStrin.nii.gz -o $out/coreg/${IDs}_StructSpaceFieldMap.nii.gz -t $out/coreg/${IDs}_FieldMap2StructRas.mat -n NearestNeighbor
 
 	# Take Fieldmap from T1 space to sequence (diffusion) space via translation aka affine
-	antsApplyTransforms -e 3 -d 3 -i ${out}/coreg/${IDs}_StructSpaceFieldMap.nii.gz -r ${masked_b0} -o $out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
+	#antsApplyTransforms -e 3 -d 3 -i ${out}/coreg/${IDs}_StructSpaceFieldMap.nii.gz -r ${masked_b0} -o $out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
 
 	# Fieldmap warp into diffusion space
 	
@@ -266,11 +266,54 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	#applywarp -i $out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -o $out/coreg/${IDs}_seqSpaceFM_Warped -r ${masked_b0} -w $out/coreg/${IDs}_seqSpaceFieldMap_warpcoef.nii.gz
 	# Apply field distortion correction to eddy corrected thing with initial mask
 
-	 fugue -i ${eddy_output} --dwell=0.00069 --loadfmap=$out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -u ${IDs}_fugued.nii.gz
+	#fugue -i ${eddy_output} --dwell=0.00069 --loadfmap=$out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -u ${IDs}_fugued.nii.gz
 
 	# Move fugued file because fugue won't accept a destination directory without trying to shame me into believing my output file should exist already 
 	
-	mv ${out}/unproc/B0_Phase/${IDs}_fugued.nii.gz ${out}/prestats/${IDs}_fugued.nii.gz
+	#mv ${out}/unproc/B0_Phase/${IDs}_fugued.nii.gz ${out}/prestats/${IDs}_fugued.nii.gz
+
+	########################################################
+	##   ANTs-based distortion correction (replaced b0)   ##
+	########################################################
+	
+	# Inverse DWI space T1
+	fslmaths /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted.nii.gz -mul -1 /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_neg.nii.gz
+
+	minmax="$(fslstats /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted.nii.gz -R)"
+	min=$(echo $minmax | cut -d ' ' -f1)
+	max=$(echo $minmax | cut -d ' ' -f2)
+	range=$(echo "${max} - ${min}" | bc)
+
+	fslmaths /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_neg.nii.gz -add $max /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse.nii.gz
+
+	# Make B0 only from t1 masked eddy
+	fslroi /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz 0 1
+	B0minmax="$(fslstats /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz -R)"
+	B0min=$(echo $B0minmax | cut -d ' ' -f1)
+	B0max=$(echo $B0minmax | cut -d ' ' -f2)
+	rangeB0=$(echo "${B0max} - ${B0min}" | bc)
+	echo $rangeB0 rangeB0
+	echo $range range
+
+	# Scale inverse to B0
+	Scale=$(echo "scale=5 ; ${range} / ${rangeB0}" | bc)
+	echo $Scale
+	fslmaths /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse.nii.gz -mul $Scale /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled.nii.gz
+
+	#remask Inversed T1
+	fslmaths /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled.nii.gz -mas $out/coreg/${IDs}_T1_betted_mask.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled_Masked.nii.gz
+
+	# Take T1 to DWI space, to keep DWI resolution
+	antsApplyTransforms -e 3 -d 3 -i /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled_Masked.nii.gz -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz -o $out/coreg/${IDs}_DWISpaceT1.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
+
+	# Affine DWI to T1  (prep for undistorting)
+	antsApplyTransforms -e 3 -i /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked.nii.gz -r $out/coreg/${IDs}_DWISpaceT1.nii.gz -o $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz -t $out/coreg/${IDs}_MultiShDiff2StructRas.mat -n NearestNeighbor 
+
+	# take b0 out
+	fslroi $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined_b0.nii.gz 0 1
+
+	# aaaaand undistort
+	~/antsRegistrationSyN.sh -d 3 -f $out/coreg/${IDs}_DWISpaceT1.nii.gz -m /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz -o /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/${IDs}_DWI_T1Warp_tBR -t b
 
 	########################################################
 	###                AMICO/NODDI			     ###
@@ -326,14 +369,14 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	###         Cleanup             ###
 	###################################
 
-#rm $out/AMICO/*.nii*
-#rm $out/AMICO/bvals
-#rm $out/AMICO/bvecs
+	#rm $out/AMICO/*.nii*
+	#rm $out/AMICO/bvals
+	#rm $out/AMICO/bvecs
 
-#done
+	#done
 
-# Pull ROI values from each subject into one csv (example uses JHU 2mm labels, grabs standard space ICVF, outputs into working directory)*
+	# Pull ROI values from each subject into one csv (example uses JHU 2mm labels, grabs standard space ICVF, outputs into working directory)*
 
-# 3dROIstats -mask JHU-ICBM-labels-2mm-PNC.nii.gz -1DRformat /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/*/*/norm/*FIT_ICVF_Std.nii.gz >ICVF_all
+	# 3dROIstats -mask JHU-ICBM-labels-2mm-PNC.nii.gz -1DRformat /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/*/*/norm/*FIT_ICVF_Std.nii.gz >ICVF_all
 
-# *may require some manual cleaning
+	# *may require some manual cleaning
