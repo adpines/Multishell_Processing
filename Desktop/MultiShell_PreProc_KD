@@ -42,7 +42,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	#topupref=$(echo $general/DTI_MultiShell_topup_ref/nifti/*.nii.gz)
 
 #	Clean up old files
-	rm -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc
+	##rm -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc
 # Make directory structure
 	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}
 	mkdir /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}
@@ -79,7 +79,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 		echo $dicom
 		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/${dicom}"
 		done
-	#rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/00*
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/00*
 
 		#b300 shell	
 
@@ -90,7 +90,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 		dicom=$(echo ${dicomspaces}|cut -d ' ' -f2|cut -d '(' -f2|cut -d ')' -f1)_300
 		mv "${i}" "/data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/${dicom}"
 		done
-	#rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/00*
+	rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/00*
 
 		#b700 shell
 
@@ -121,7 +121,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	$scripts/bval_rounder.sh $unroundedbval $out/prestats/qa/${IDs}_roundedbval.bval 100
 
 	# Get quality assurance metrics on DTI data for each shell
-	##$scripts/qa_dti_v3.sh $inputnifti $out/prestats/qa/${IDs}_roundedbval.bval $bvec $out/prestats/qa/${IDs}_dwi.qa 	
+	$scripts/qa_dti_v3.sh $inputnifti $out/prestats/qa/${IDs}_roundedbval.bval $bvec $out/prestats/qa/${IDs}_dwi.qa 	
 	
 	# Get quality assurance metrics on DTI data for each shell with v4
 	#$scripts/qa_dti_v4.sh $inputnifti $unroundedbval $bvec 100 $out/prestats/qa/${IDs}_${SubDate_and_ID}_dwi.qa 
@@ -146,13 +146,13 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	###########################################################
 
 	# Extract b0 from anterior to posterior phase-encoded input nifti for topup calculation	
-	#fslroi $inputnifti $out/prestats/topup/${IDs}_nodif_AP 0 1
+	fslroi $inputnifti $out/prestats/topup/${IDs}_nodif_AP 0 1
 
 	# Extract b0 from P>A topup ref for topup calculation
-	#fslroi $topupref $out/prestats/topup/${IDs}_${SubDate_and_ID}_nodif_PA 0 1
+	fslroi $topupref $out/prestats/topup/${IDs}_${SubDate_and_ID}_nodif_PA 0 1
 
 	# Merge b0s for topup calculation
-	#fslmerge -t $out/prestats/topup/${IDs}_${SubDate_and_ID}_b0s $out/prestats/topup/${IDs}_${SubDate_and_ID}_nodif_AP $out/prestats/topup/${IDs}_${SubDate_and_ID}_nodif_PA
+	fslmerge -t $out/prestats/topup/${IDs}_${SubDate_and_ID}_b0s $out/prestats/topup/${IDs}_${SubDate_and_ID}_nodif_AP $out/prestats/topup/${IDs}_${SubDate_and_ID}_nodif_PA
 
 	# Run topup to calculate correction for field distortion
 	#topup --imain=$out/prestats/topup/${IDs}_${SubDate_and_ID}_b0s.nii.gz --datain=$acqp --out=$out/prestats/topup/${IDs}_${SubDate_and_ID}_topup --fout=$out/prestats/topup/${IDs}_${SubDate_and_ID}_field --iout=$out/prestats/topup/${IDs}_${SubDate_and_ID}_topup_iout
@@ -173,7 +173,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	echo $indx > ${eddy_outdir}/index.txt
 
 	# Run eddy correction. Corrects for Electromagnetic-pulse induced distortions. Most computationally intensive of anything here, has taken >5 hours. More recent eddy correction available in more recent FSL versions	
-	##/share/apps/fsl/5.0.9-eddy-patch/bin/eddy_openmp --imain=${inputnifti} --mask=$out/prestats/eddy/${IDs}_init_bet_mask.nii.gz --index=${eddy_outdir}/index.txt --acqp=$acqp --bvecs=$bvec --bvals=$out/prestats/qa/${IDs}_roundedbval.bval --data_is_shelled --out=$eddy_outdir/${IDs}_eddied.nii.gz --repol
+	/share/apps/fsl/5.0.9-eddy-patch/bin/eddy_openmp --imain=${inputnifti} --mask=$out/prestats/eddy/${IDs}_init_bet_mask.nii.gz --index=${eddy_outdir}/index.txt --acqp=$acqp --bvecs=$bvec --bvals=$out/prestats/qa/${IDs}_roundedbval.bval --data_is_shelled --out=$eddy_outdir/${IDs}_eddied.nii.gz --repol
 	
 	eddy_output=$eddy_outdir/${IDs}_eddied.nii.gz
 	
@@ -213,7 +213,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	c3d_affine_tool -src ${masked_b0} -ref ${out}/coreg/${IDs}_T1_betted.nii.gz $out/coreg/${IDs}_MultiShDiff2StructFSL.mat -fsl2ras -oitk $out/coreg/${IDs}_MultiShDiff2StructRas.mat
 
 	# Use Subject to template warp and affine from grmpy directory after Ras diffusion -> structural space affine to put eddied_bet_2 onto pnc template
-	#antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain_2mm.nii.gz -o $out/coreg/${bblIDs}_${SubDate_and_ID}_eddied_b0_template_space.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/$SubDate_and_ID/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/$SubDate_and_ID/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/coreg/${bblIDs}_${SubDate_and_ID}_MultiShDiff2StructRas.mat
+	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain_2mm.nii.gz -o $out/coreg/${bblIDs}_${SubDate_and_ID}_eddied_b0_template_space.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/$SubDate_and_ID/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/$SubDate_and_ID/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/coreg/${bblIDs}_${SubDate_and_ID}_MultiShDiff2StructRas.mat
 
 	# Take T1 generated mask to sequence (diffusion) space
 	antsApplyTransforms -e 3 -d 3 -i ${out}/coreg/${IDs}_T1_betted_mask.nii.gz -r ${masked_b0} -o $out/prestats/eddy/${IDs}_seqSpaceT1Mask.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
@@ -257,7 +257,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	# Take Fieldmap to T1 space
 	#antsApplyTransforms -e 3 -d 3 -i ${out}/prestats/fieldmap.nii.gz -r ${out}/coreg/${IDs}_T1_bettedStrin.nii.gz -o $out/coreg/${IDs}_StructSpaceFieldMap.nii.gz -t $out/coreg/${IDs}_FieldMap2StructRas.mat -n NearestNeighbor
 
-	# Take Fieldmap from T1 space to sequence (diffusion) space via translation aka affine
+	# Take Fieldmap from T1 space to sequence (diffusion) space via affine
 	#antsApplyTransforms -e 3 -d 3 -i ${out}/coreg/${IDs}_StructSpaceFieldMap.nii.gz -r ${masked_b0} -o $out/coreg/${IDs}_seqSpaceFieldMap.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
 
 	# Fieldmap warp into diffusion space
@@ -307,19 +307,25 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	antsApplyTransforms -e 3 -d 3 -i /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled_Masked.nii.gz -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz -o $out/coreg/${IDs}_DWISpaceT1.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
 
 	# Affine DWI to T1  (prep for undistorting)
-	antsApplyTransforms -e 3 -i /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked.nii.gz -r $out/coreg/${IDs}_DWISpaceT1.nii.gz -o $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz -t $out/coreg/${IDs}_MultiShDiff2StructRas.mat -n NearestNeighbor 
+	antsApplyTransforms -e 3 -i ${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz -r $out/coreg/${IDs}_DWISpaceT1.nii.gz -o $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz -t $out/coreg/${IDs}_MultiShDiff2StructRas.mat -n NearestNeighbor 
 
 	# take b0 out
-	fslroi $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined_b0.nii.gz 0 1
-
+	##fslroi $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined_b0.nii.gz 0 1
+	
 	# aaaaand undistort
-	~/antsRegistrationSyN.sh -d 3 -f $out/coreg/${IDs}_DWISpaceT1.nii.gz -m /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz -o /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/${IDs}_DWI_T1Warp_tBR -t b
+	~/antsRegistrationSyN.sh -d 3 -f $out/coreg/${IDs}_DWISpaceT1.nii.gz -m /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz -o /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/${IDs}_DWI_T1Warp_B -t b
+
+	antsApplyTransforms -d 3 -e 3 -i $out/prestats/eddy/${IDs}_eddied.nii.gz -r  $out/prestats/${IDs}_DWI_T1Warp_BWarped.nii.gz -o  $out/prestats/${IDs}_eddied_undistort_warped.nii.gz -t $out/prestats/${IDs}_DWI_T1Warp_B1Warp.nii.gz -t $out/prestats/${IDs}_DWI_T1Warp_B0GenericAffine.mat
+
+	#remask eddy output using T1 space generated mask
+
+	fslmaths  $out/prestats/${IDs}_eddied_undistort_warped.nii.gz -mas $out/prestats/eddy/${IDs}_seqSpaceT1Mask.nii.gz  $out/prestats/${IDs}_eddied_undistort_warped_t1Masked.nii.gz
 
 	########################################################
 	###                AMICO/NODDI			     ###
 	########################################################
 
-	# Generate AMICO scheme (edit paths for files like mask and eddy output in generateamicoM script)
+	# Generate AMICO scheme (edit paths for files like mask and eddy output in generateamicoM script, also this version has a 700 shell, where HCP has 800 shell)
 	~/generateAmicoM_AP_KD.pl $IDs
 
 	# Run AMICO
@@ -369,14 +375,14 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	###         Cleanup             ###
 	###################################
 
-	#rm $out/AMICO/*.nii*
-	#rm $out/AMICO/bvals
-	#rm $out/AMICO/bvecs
+#rm $out/AMICO/*.nii*
+#rm $out/AMICO/bvals
+#rm $out/AMICO/bvecs
 
-	#done
+#done
 
-	# Pull ROI values from each subject into one csv (example uses JHU 2mm labels, grabs standard space ICVF, outputs into working directory)*
+# Pull ROI values from each subject into one csv (example uses JHU 2mm labels, grabs standard space ICVF, outputs into working directory)*
 
-	# 3dROIstats -mask JHU-ICBM-labels-2mm-PNC.nii.gz -1DRformat /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/*/*/norm/*FIT_ICVF_Std.nii.gz >ICVF_all
+# 3dROIstats -mask JHU-ICBM-labels-2mm-PNC.nii.gz -1DRformat /data/joy/BBL/projects/multishell_diffusion/processedData/multishellPipelineFall2017/*/*/norm/*FIT_ICVF_Std.nii.gz >ICVF_all
 
-	# *may require some manual cleaning
+# *may require some manual cleaning
