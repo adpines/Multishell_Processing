@@ -25,6 +25,8 @@ scripts=/home/melliott/scripts
 acqp=~/acqphcp.txt
 indx=""	
 
+rm -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/AMICO/NODDI
+
 # For AMICO/NODDI Running (via pcook)				
 matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobalInitialize.m' -r 'exit' 
 	
@@ -107,15 +109,15 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	#rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/00*
 	#rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/core*
 	#rm /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/core*
-	#cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells
+	##cd /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells
 	#dcm2nii 
 
 	#fslmerge -t ${out}/unproc/${IDs}_MultiShell_Merged.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/unproc/shells/*.nii.gz
 	inputnifti=${out}/unproc/shells/*.nii.gz	
 
 	# Merge corresponding .bval and .bvec files	
-	#paste -d"\0" ${out}/unproc/shells/*.bvec >> ${out}/unproc/bvecs
-	#paste -d"\0" ${out}/unproc/shells/*.bval >> ${out}/unproc/bvals
+	paste -d"\0" ${out}/unproc/shells/*.bvec >> ${out}/unproc/bvecs
+	paste -d"\0" ${out}/unproc/shells/*.bval >> ${out}/unproc/bvals
 
 	unroundedbval=$(echo ${out}/unproc/shells/*.bval)
 	bvec=$(echo ${out}/unproc/shells/*.bvec)
@@ -144,7 +146,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	#mv ${qaMask} ${out}/prestats/qa/${IDs}_${SubDate_and_ID}_${qfilename}
 
 	## Zip all nifti files
-	#gzip -f ${out}/prestats/qa/*.nii
+	gzip -f ${out}/prestats/qa/*.nii
 	
 	###########################################################
 	##           EDDY DISTORTION/MOTION CORRECTION           ##
@@ -166,12 +168,12 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	#applytopup --imain=$inputnifti --datain=$acqp --inindex=1 --topup=$out/prestats/topup/${IDs}_${SubDate_and_ID}_topup --out=$out/prestats/topup/${IDs}_${SubDate_and_ID}_topup_applied --method=jac
 
 	# Average MR signal over all volumes so brain extraction can work on signal representative of whole scan
-	fslmaths $inputnifti -Tmean $out/prestats/eddy/${IDs}_mean_for_init_mask.nii.gz
+	##fslmaths $inputnifti -Tmean $out/prestats/eddy/${IDs}_mean_for_init_mask.nii.gz
 
 	# Brain extraction mask for eddy, -m makes binary mask
 	init_mask=$out/prestats/eddy/${IDs}_init_bet.nii.gz
 
-	bet $out/prestats/eddy/${IDs}_mean_for_init_mask.nii.gz ${init_mask} -m -f 0.2
+	bet ${inputnifti} ${init_mask} -m -f 0.2
 
 	# Create index for eddy to know which acquisition parameters apply to which volumes.(Original usage only correcting A>P, only using one set of acq params.)
 	for ((i=1; i<=116; i+=1)); do indx="$indx 1"; done
@@ -218,7 +220,7 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	c3d_affine_tool -src ${masked_b0} -ref ${out}/coreg/${IDs}_T1_betted.nii.gz $out/coreg/${IDs}_MultiShDiff2StructFSL.mat -fsl2ras -oitk $out/coreg/${IDs}_MultiShDiff2StructRas.mat
 
 	# Use Subject to template warp and affine from grmpy directory after Ras diffusion -> structural space affine to put eddied_bet_2 onto pnc template
-	antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain_2mm.nii.gz -o $out/coreg/${bblIDs}_${SubDate_and_ID}_eddied_b0_template_space.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/$SubDate_and_ID/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/$SubDate_and_ID/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/coreg/${bblIDs}_${SubDate_and_ID}_MultiShDiff2StructRas.mat
+	#antsApplyTransforms -e 3 -d 3 -i ${masked_b0} -r /data/joy/BBL/studies/pnc/template/pnc_template_brain_2mm.nii.gz -o $out/coreg/${bblIDs}_${SubDate_and_ID}_eddied_b0_template_space.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/$SubDate_and_ID/antsCT/*SubjectToTemplate1Warp.nii.gz -t /data/joy/BBL/studies/grmpy/processedData/structural/struct_pipeline_20170716/$bblIDs/$SubDate_and_ID/antsCT/*SubjectToTemplate0GenericAffine.mat -t $out/coreg/${bblIDs}_${SubDate_and_ID}_MultiShDiff2StructRas.mat
 
 	# Take T1 generated mask to sequence (diffusion) space
 	antsApplyTransforms -e 3 -d 3 -i ${out}/coreg/${IDs}_T1_betted_mask.nii.gz -r ${masked_b0} -o $out/prestats/eddy/${IDs}_seqSpaceT1Mask.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
@@ -291,8 +293,8 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	fslmaths /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_neg.nii.gz -add $max /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse.nii.gz
 
 	# Make B0 only from t1 masked eddy
-	##fslroi /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz 0 1
-	B0minmax="$(fslstats /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz -R)"
+	#fslroi /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz 0 1
+	B0minmax="$(fslstats ${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz -R)"
 	B0min=$(echo $B0minmax | cut -d ' ' -f1)
 	B0max=$(echo $B0minmax | cut -d ' ' -f2)
 	rangeB0=$(echo "${B0max} - ${B0min}" | bc)
@@ -305,18 +307,18 @@ matlab -nodisplay -r 'run /data/jux/daviska/apines/amicoSYRP/scripts/amicoGlobal
 	fslmaths /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled.nii.gz -mas $out/coreg/${IDs}_T1_betted_mask.nii.gz /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled_Masked.nii.gz
 
 	# Take T1 to DWI space, to keep DWI resolution
-	antsApplyTransforms -e 3 -d 3 -i /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled_Masked.nii.gz -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_eddied_t1Masked_b0.nii.gz -o $out/coreg/${IDs}_DWISpaceT1.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
+	antsApplyTransforms -e 3 -d 3 -i /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_T1_betted_Inverse_Scaled_Masked.nii.gz -r /${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz -o $out/coreg/${IDs}_DWISpaceT1.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -n NearestNeighbor
 
 	# Affine DWI to T1  (prep for undistorting)
-	antsApplyTransforms -e 3 -i ${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz -r $out/coreg/${IDs}_DWISpaceT1.nii.gz -o $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz -t $out/coreg/${IDs}_MultiShDiff2StructRas.mat -n NearestNeighbor 
+	####antsApplyTransforms -e 3 -i ${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz -r $out/coreg/${IDs}_DWISpaceT1.nii.gz -o $out/prestats/eddy/${IDs}_DWI_T1Affined.nii.gz -t $out/coreg/${IDs}_MultiShDiff2StructRas.mat -n NearestNeighbor 
 
 	# take b0 out
-	fslroi $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined_b0.nii.gz 0 1
+	##fslroi $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz $out/prestats/eddy/${IDs}_T1SpaceDWI_Affined_b0.nii.gz 0 1
 
 	# aaaaand undistort
-	~/antsRegistrationSyN.sh -d 3 -f $out/coreg/${IDs}_DWISpaceT1.nii.gz -m /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/eddy/${IDs}_T1SpaceDWI_Affined.nii.gz -o /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/${IDs}_DWI_T1Warp_B -t b
+	/data/jux/daviska/apines/ANTs/Scripts/antsRegistrationSyN.sh -d 3 -f $out/coreg/${IDs}_DWISpaceT1.nii.gz -m ${eddy_outdir}/${IDs}_eddied_initMasked_b0.nii.gz -o /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/prestats/${IDs}_DWI_T1Warp_B -t br -s 100 -j 1
 
-	antsApplyTransforms -d 3 -e 3 -i $out/prestats/eddy/${IDs}_eddied.nii.gz -r  $out/prestats/${IDs}_DWI_T1Warp_BWarped.nii.gz -o  $out/prestats/${IDs}_eddied_undistort_warped.nii.gz -t $out/prestats/${IDs}_DWI_T1Warp_B1Warp.nii.gz -t $out/prestats/${IDs}_DWI_T1Warp_B0GenericAffine.mat
+	antsApplyTransforms -d 3 -e 3 -i $out/prestats/eddy/${IDs}_eddied.nii.gz -o $out/prestats/${IDs}_eddied_undistort_warped.nii.gz -r $out/prestats/${IDs}_DWI_T1Warp_BWarped.nii.gz -t $out/prestats/${IDs}_DWI_T1Warp_B1Warp.nii.gz -t $out/prestats/${IDs}_DWI_T1Warp_B0GenericAffine.mat 
 
 	#remask eddy output using T1 space generated mask
 
