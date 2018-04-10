@@ -140,7 +140,7 @@ ${cdir}/dtlutgen -schemefile $out/tractography/${IDs}.scheme -snr 28 > ${out}/pi
 
 mkdir ${out}/pico
 
-cat $out/tractography/${IDs}_WdtModelFit.Bdouble | ${cdir}/picopdfs -inputmodel dt -luts ${out}/picotable.dat | ${cdir}/track -inputmodel pico -seedfile $out/coreg/${IDs}_DWISpace_AAL.nii.gz -iterations 2000 -curvethresh 80 -anisthresh 0.05 -anisfile ${out}/tractography/${IDs}_Camino_FA.nii.gz | $cdir/procstreamlines -exclusionfile ${exclusion_path} -truncateinexclusion -endpointfile ${subAAL} -outputfile ${out}/tractography/${IDs}_probtracts_exclusionendfile.Bfloat
+cat $out/tractography/${IDs}_WdtModelFit.Bdouble | ${cdir}/picopdfs -inputmodel dt -luts ${out}/picotable.dat | ${cdir}/track -inputmodel pico -seedfile $out/coreg/${IDs}_DWISpace_AAL.nii.gz -iterations 2000 -curvethresh 80 -anisthresh 0.03 -anisfile ${out}/tractography/${IDs}_Camino_FA.nii.gz | $cdir/procstreamlines -exclusionfile ${exclusion_path} -truncateinexclusion -endpointfile ${subAAL} -outputfile ${out}/tractography/${IDs}_probtracts_exclusionendfile.Bfloat
 
 ###cat $out/tractography/${IDs}_WdtModelFit.Bdouble | ${cdir}/picopdfs -inputmodel dt -luts ${out}/picotable.dat | ${cdir}/track -inputmodel pico -seedfile $out/coreg/${IDs}_DWISpace_RHarvOx.nii.gz -iterations 1000 -curvethresh 80 -anisthresh 0.05 -anisfile ${out}/tractography/${IDs}_Camino_FA.nii.gz > ${out}/tractography/${IDs}_picotracts_RHOx.Bfloat ##| ${cdir}/procstreamlines -seedfile ${subAAL} -outputcp -outputroot ${out}/pico/ -iterations 50 
 
