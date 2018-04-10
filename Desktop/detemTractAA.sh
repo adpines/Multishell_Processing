@@ -128,7 +128,7 @@ fslcpgeom $seed_path $out/tractography/${IDs}_Camino_FA.nii.gz
 
 #Camino tractography
 
-$cdir/track -inputmodel dt -seedfile "${subAAL}" -inputfile "${model_fit_path}" -tracker euler -interpolator linear -iterations 10 -curvethresh 60 | $cdir/procstreamlines -exclusionfile ${exclusion_path} -truncateinexclusion -endpointfile ${subAAL} -outputfile ${out}/tractography/${IDs}_determTractsAAredoT1ei.Bfloat
+$cdir/track -inputmodel dt -seedfile "${subAAL}" -inputfile "${model_fit_path}" -tracker euler -interpolator linear -iterations 10 -curvethresh 60 -anisthresh 0.03 -anisfile ${out}/tractography/${IDs}_Camino_FA.nii.gz | $cdir/procstreamlines -exclusionfile ${exclusion_path} -truncateinexclusion -endpointfile ${subAAL} -outputfile ${out}/tractography/${IDs}_determTractsAAredoT1FAthresh.Bfloat
 ##$cdir/track -inputmodel dt -seedfile "${seed_path}" -inputfile "${model_fit_path}" -tracker fact -iterations 20 -curvethresh 60 | $cdir/procstreamlines -waypointfile ${waypoint_path} -exclusionfile ${exclusion_path} -endpointfile ${out}/tractography/endpoint.nii.gz -outputfile "${tractography_output}"
 ##$cdir/track -inputmodel dt -seedfile "${seed_path}" -inputfile "${model_fit_path}" -tracker fact -iterations 20 -curvethresh 70 | $cdir/procstreamlines -exclusionfile ${exclusion_path} -endpointfile ${out}/tractography/endpoint.nii.gz -outputfile "${tractography_output}"
 
@@ -166,8 +166,7 @@ rm $out/tractography/${IDs}_Camino_FA.img
 cp $out/tractography/${IDs}_Camino_FA.nii.gz $out/coreg
 
 # Mean ICVF matrix
-#####$cdir/conmat -inputfile "${tractography_output}" -targetfile ${subAAL} -scalarfile $out/coreg/FIT_ICVF.nii -tractstat mean -outputroot $out/tractography/${IDs}_ICVF_matrixaa
-
+$cdir/conmat -inputfile "${tractography_output}" -targetfile ${subAAL} -scalarfile $out/coreg/FIT_ICVF.nii -tractstat mean -outputroot $out/tractography/${IDs}_ICVF_determTractsAAredoT1FAthresh ​
 # Mean ODI matrix
 #####$cdir/conmat -inputfile "${tractography_output}" -targetfile ${subAAL} -scalarfile $out/coreg/FIT_OD.nii -tractstat mean -outputroot $out/tractography/${IDs}_ODI_matrixaa
 
