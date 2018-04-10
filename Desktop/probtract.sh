@@ -54,25 +54,25 @@ csf=${out}/coreg/${IDs}_CSF.nii.gz
 
 ###/data/jux/daviska/apines/ANTs/Scripts/antsRegistrationSyN.sh -d 3 -f $out/coreg/${IDs}_T1_betted.nii.gz -m ${MNI} -o /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_MNI_T1_Warp
 
-antsApplyTransforms -d 3 -e 0 -i ${AAL} -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_DWISpaceT1.nii.gz -o  $out/coreg/${IDs}_DWISpace_HarvOx.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -t /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_MNI_T1_Warp1Warp.nii.gz -t  $out/coreg/${IDs}_MNI_T1_Warp0GenericAffine.mat -n NearestNeighbor
+##antsApplyTransforms -d 3 -e 0 -i ${AAL} -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_DWISpaceT1.nii.gz -o  $out/coreg/${IDs}_DWISpace_HarvOx.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -t /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_MNI_T1_Warp1Warp.nii.gz -t  $out/coreg/${IDs}_MNI_T1_Warp0GenericAffine.mat -n NearestNeighbor
 
-antsApplyTransforms -d 3 -e 0 -i /data/jux/daviska/apines/atlases/mergedlmatch.nii.gz -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_DWISpaceT1.nii.gz -o  $out/coreg/${IDs}_DWISpace_LHarvOx.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -t /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_MNI_T1_Warp1Warp.nii.gz -t  $out/coreg/${IDs}_MNI_T1_Warp0GenericAffine.mat -n NearestNeighbor
+##antsApplyTransforms -d 3 -e 0 -i /data/jux/daviska/apines/atlases/mergedlmatch.nii.gz -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_DWISpaceT1.nii.gz -o  $out/coreg/${IDs}_DWISpace_LHarvOx.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -t /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_MNI_T1_Warp1Warp.nii.gz -t  $out/coreg/${IDs}_MNI_T1_Warp0GenericAffine.mat -n NearestNeighbor
 
-antsApplyTransforms -d 3 -e 0 -i /data/jux/daviska/apines/atlases/mergedrmatch.nii.gz -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_DWISpaceT1.nii.gz -o  $out/coreg/${IDs}_DWISpace_RHarvOx.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -t /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_MNI_T1_Warp1Warp.nii.gz -t  $out/coreg/${IDs}_MNI_T1_Warp0GenericAffine.mat -n NearestNeighbor
+##antsApplyTransforms -d 3 -e 0 -i /data/jux/daviska/apines/atlases/mergedrmatch.nii.gz -r /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_DWISpaceT1.nii.gz -o  $out/coreg/${IDs}_DWISpace_RHarvOx.nii.gz -t [$out/coreg/${IDs}_MultiShDiff2StructRas.mat,1] -t /data/jux/daviska/apines/3T_Subjects_NODDI/${IDs}/coreg/${IDs}_MNI_T1_Warp1Warp.nii.gz -t  $out/coreg/${IDs}_MNI_T1_Warp0GenericAffine.mat -n NearestNeighbor
 
 ### Weird combination of fslmaths to distinguish left and right hippo, remove ashs-generated rois from AAL (or other atlas if subbed in)
 
 #distinguish
-fslmaths ${out}/coreg/RBinarizedHippo.nii.gz -mul 2 ${out}/coreg/RBinarizedHippoPlus1.nii.gz
-fslmaths ${out}/coreg/RBinarizedHippoPlus1.nii.gz -add ${out}/coreg/LBinarizedHippo.nii.gz ${out}/coreg/RLBinHippo.nii.gz
+##fslmaths ${out}/coreg/RBinarizedHippo.nii.gz -mul 2 ${out}/coreg/RBinarizedHippoPlus1.nii.gz
+##fslmaths ${out}/coreg/RBinarizedHippoPlus1.nii.gz -add ${out}/coreg/LBinarizedHippo.nii.gz ${out}/coreg/RLBinHippo.nii.gz
 
 # remove ashs-generated rois from AAL (or other atlas if subbed in)
-fslmaths $out/coreg/BinarizedHippo.nii.gz -sub 1 $out/coreg/sub1.nii.gz
-fslmaths $out/coreg/sub1.nii.gz -mul -1 $out/coreg/0ed.nii.gz
-fslmaths $out/coreg/${IDs}_DWISpace_HarvOx.nii.gz -mul $out/coreg/0ed.nii.gz $out/coreg/${IDs}_DWISpace_HarvOx_noH.nii.gz
-fslmaths ${out}/coreg/RLBinHippo.nii.gz -add $out/coreg/${IDs}_DWISpace_HarvOx_noH.nii.gz $out/coreg/${IDs}_DWISpace_HarvOx_ASH.nii.gz
+##fslmaths $out/coreg/BinarizedHippo.nii.gz -sub 1 $out/coreg/sub1.nii.gz
+##fslmaths $out/coreg/sub1.nii.gz -mul -1 $out/coreg/0ed.nii.gz
+##fslmaths $out/coreg/${IDs}_DWISpace_HarvOx.nii.gz -mul $out/coreg/0ed.nii.gz $out/coreg/${IDs}_DWISpace_HarvOx_noH.nii.gz
+##fslmaths ${out}/coreg/RLBinHippo.nii.gz -add $out/coreg/${IDs}_DWISpace_HarvOx_noH.nii.gz $out/coreg/${IDs}_DWISpace_HarvOx_ASH.nii.gz
 
-subAAL=$out/coreg/${IDs}_DWISpace_HarvOx.nii.gz
+subAAL=$out/coreg/${IDs}_DWISpace_AAL.nii.gz
 
 ###fslmaths ${subAAL} -thr 6301 -uthr 6302 $out/tractography/${IDs}_Precun.nii.gz
 
@@ -82,7 +82,7 @@ subAAL=$out/coreg/${IDs}_DWISpace_HarvOx.nii.gz
 ###fslmaths $out/tractography/${IDs}_Precun.nii.gz -mas $out/coreg/${IDs}_seqspaceWM.nii.gz $out/coreg/${IDs}_seqspaceWM_Precun_Intersect.nii.gz
 
 #fitTensorsinCamino
-mkdir $out/tractography
+##mkdir $out/tractography
 
 export CAMINO_HEAP_SIZE=10000
 $cdir/fsl2scheme -bvecfile $in/bvecs -bvalfile $in/bvals > $out/tractography/${IDs}.scheme
@@ -138,11 +138,11 @@ ${cdir}/dtlutgen -schemefile $out/tractography/${IDs}.scheme -snr 28 > ${out}/pi
 ###${cdir}/picopdfs -inputmodel dt -luts ${out}/picotable.dat < ${out}/tractography/${IDs}_WdtModelFit.Bdouble > ${out}/picoTracts.Bfloat
 ###$cdir/track -inputmodel pico -seedfile ${subAAL} -iterations 50 | $cdir/procstreamlines -seedfile ${subAAL} -outputcp -outputfile ${out}/pc_streams.Bdouble
 
- mkdir ${out}/pico
+mkdir ${out}/pico
 
-cat $out/tractography/${IDs}_WdtModelFit.Bdouble | ${cdir}/picopdfs -inputmodel dt -luts ${out}/picotable.dat | ${cdir}/track -inputmodel pico -seedfile $out/coreg/${IDs}_DWISpace_LHarvOx.nii.gz -iterations 1000 -curvethresh 80 -anisthresh 0.05 -anisfile ${out}/tractography/${IDs}_Camino_FA.nii.gz > ${out}/tractography/${IDs}_picotracts_LHOx.Bfloat ##| ${cdir}/procstreamlines -seedfile ${subAAL} -outputcp -outputroot ${out}/pico/ -iterations 50 
+cat $out/tractography/${IDs}_WdtModelFit.Bdouble | ${cdir}/picopdfs -inputmodel dt -luts ${out}/picotable.dat | ${cdir}/track -inputmodel pico -seedfile $out/coreg/${IDs}_DWISpace_AAL.nii.gz -iterations 2000 -curvethresh 80 -anisthresh 0.05 -anisfile ${out}/tractography/${IDs}_Camino_FA.nii.gz | $cdir/procstreamlines -exclusionfile ${exclusion_path} -truncateinexclusion -endpointfile ${subAAL} -outputfile ${out}/tractography/${IDs}_probtracts_exclusionendfile.Bfloat
 
-cat $out/tractography/${IDs}_WdtModelFit.Bdouble | ${cdir}/picopdfs -inputmodel dt -luts ${out}/picotable.dat | ${cdir}/track -inputmodel pico -seedfile $out/coreg/${IDs}_DWISpace_RHarvOx.nii.gz -iterations 1000 -curvethresh 80 -anisthresh 0.05 -anisfile ${out}/tractography/${IDs}_Camino_FA.nii.gz > ${out}/tractography/${IDs}_picotracts_RHOx.Bfloat ##| ${cdir}/procstreamlines -seedfile ${subAAL} -outputcp -outputroot ${out}/pico/ -iterations 50 
+###cat $out/tractography/${IDs}_WdtModelFit.Bdouble | ${cdir}/picopdfs -inputmodel dt -luts ${out}/picotable.dat | ${cdir}/track -inputmodel pico -seedfile $out/coreg/${IDs}_DWISpace_RHarvOx.nii.gz -iterations 1000 -curvethresh 80 -anisthresh 0.05 -anisfile ${out}/tractography/${IDs}_Camino_FA.nii.gz > ${out}/tractography/${IDs}_picotracts_RHOx.Bfloat ##| ${cdir}/procstreamlines -seedfile ${subAAL} -outputcp -outputroot ${out}/pico/ -iterations 50 
 
 # Bayesian Tract
 ##${cdir}/track -inputfile $out/tractography/${IDs}_i2v.Bfloat -inputmodel bayesdirac -schemefile $out/tractography/${IDs}.scheme -iterations 50 -seedfile ${subAAL} > ${out}/${IDs}_bayestracts.bfloat
@@ -166,7 +166,7 @@ rm $out/tractography/${IDs}_Camino_FA.img
 cp $out/tractography/${IDs}_Camino_FA.nii.gz $out/coreg
 
 # Mean ICVF matrix
-#####$cdir/conmat -inputfile "${tractography_output}" -targetfile ${subAAL} -scalarfile $out/coreg/FIT_ICVF.nii -tractstat mean -outputroot $out/tractography/${IDs}_ICVF_matrixaa
+$cdir/conmat -inputfile "${tractography_output}" -targetfile ${subAAL} -scalarfile $out/coreg/FIT_ICVF.nii -tractstat mean -outputroot $out/tractography/${IDs}_probtracts_exclusionendfile_aa
 
 # Mean ODI matrix
 #####$cdir/conmat -inputfile "${tractography_output}" -targetfile ${subAAL} -scalarfile $out/coreg/FIT_OD.nii -tractstat mean -outputroot $out/tractography/${IDs}_ODI_matrixaa
