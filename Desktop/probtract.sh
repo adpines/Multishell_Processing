@@ -166,7 +166,7 @@ rm $out/tractography/${IDs}_Camino_FA.img
 cp $out/tractography/${IDs}_Camino_FA.nii.gz $out/coreg
 
 # Mean ICVF matrix
-$cdir/conmat -inputfile "${tractography_output}" -targetfile ${subAAL} -scalarfile $out/coreg/FIT_ICVF.nii -tractstat mean -outputroot $out/tractography/${IDs}_probtracts_exclusionendfile_aa
+$cdir/conmat -inputfile ${out}/tractography/${IDs}_probtracts_exclusionendfile.Bfloat -targetfile ${subAAL} -scalarfile $out/coreg/FIT_ICVF.nii -tractstat mean -outputroot $out/tractography/${IDs}_probtracts_exclusionendfile_aa
 
 # Mean ODI matrix
 #####$cdir/conmat -inputfile "${tractography_output}" -targetfile ${subAAL} -scalarfile $out/coreg/FIT_OD.nii -tractstat mean -outputroot $out/tractography/${IDs}_ODI_matrixaa
